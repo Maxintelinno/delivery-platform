@@ -1,13 +1,111 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+enum Role {
+  CUSTOMER
+  RIDER
+  MERCHANT
+}
+
+enum OrderStatus {
+  PENDING
+  ACCEPTED
+  PREPARING
+  SEARCHING_RIDER
+  PICKED_UP
+  DELIVERING
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  phone     String   @unique
+  role      Role     @default(CUSTOMER)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  merchant       Merchant?
+  customerOrders Order[]   @relation("CustomerOrders")
+  riderOrders    Order[]   @relation("RiderOrders")
+}
+
+model Merchant {
+  id        Int      @id @default(autoincrement())
+  ownerId   Int      @unique
+  owner     User     @relation(fields: [ownerId], references: [id])
+  name      String
+  address   String
+  latitude  Float
+  longitude Float
+  isOpen    Boolean  @default(false)
+  rating    Float    @default(0.0)
+  createdAt DateTime @default(now())
+
+  menus  Menu[]
+  orders Order[]
+}
+
+model Menu {
+  id          Int      @id @default(autoincrement())
+  merchantId  Int
+  merchant    Merchant @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  price       Float
+  imageUrl    String?
+  isAvailable Boolean  @default(true)
+  options     Json     @default("[]")
+  createdAt   DateTime @default(now())
+
+  orderItems OrderItem[]
+}
+
+model Order {
+  id               Int           @id @default(autoincrement())
+  customerId       Int
+  customer         User          @relation("CustomerOrders", fields: [customerId], references: [id])
+  merchantId       Int
+  merchant         Merchant      @relation(fields: [merchantId], references: [id])
+  riderId          Int?
+  rider            User?         @relation("RiderOrders", fields: [riderId], references: [id])
+  totalAmount      Float
+  deliveryFee      Float
+  netAmount        Float
+  deliveryAddress  String
+  deliveryLatitude Float
+  deliveryLongitude Float
+  status           OrderStatus   @default(PENDING)
+  paymentStatus    PaymentStatus @default(PENDING)
+  paymentMethod    String
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  orderItems OrderItem[]
+}
+
+model OrderItem {
+  id              Int   @id @default(autoincrement())
+  orderId         Int
+  order           Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  menuId          Int
+  menu            Menu  @relation(fields: [menuId], references: [id])
+  quantity        Int
+  price           Float
+  selectedOptions Json  @default("{}")
 }
