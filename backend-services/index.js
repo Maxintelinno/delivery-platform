@@ -193,6 +193,34 @@ app.get('/api/orders/merchant/:merchantId', async (req, res) => {
   }
 });
 
+// Fetch all available orders (preparing, no rider assigned)
+app.get('/api/orders/available', async (req, res) => {
+  try {
+    const orders = await prisma.order.findMany({
+      where: {
+        status: 'PREPARING',
+        riderId: null,
+      },
+      orderBy: {
+        createdAt: 'asc',
+      },
+      include: {
+        merchant: true,
+        orderItems: {
+          include: {
+            menu: true,
+          },
+        },
+      },
+    });
+
+    res.json(orders);
+  } catch (error) {
+    console.error("Error fetching available orders:", error);
+    res.status(500).json({ error: "Failed to fetch available orders" });
+  }
+});
+
 // Fetch all orders for a specific customer
 app.get('/api/orders/customer/:customerId', async (req, res) => {
   try {
