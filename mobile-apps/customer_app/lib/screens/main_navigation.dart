@@ -7,6 +7,8 @@ import 'profile_screen.dart';
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
 
+  static final ValueNotifier<int> tabChangeNotifier = ValueNotifier<int>(0);
+
   @override
   State<MainNavigation> createState() => _MainNavigationState();
 }
@@ -22,11 +24,37 @@ class _MainNavigationState extends State<MainNavigation> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    MainNavigation.tabChangeNotifier.addListener(_onTabChange);
+  }
+
+  @override
+  void dispose() {
+    MainNavigation.tabChangeNotifier.removeListener(_onTabChange);
+    super.dispose();
+  }
+
+  void _onTabChange() {
+    setState(() {
+      _currentIndex = MainNavigation.tabChangeNotifier.value;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _screens,
+      body: NotificationListener<TabSwitchNotification>(
+        onNotification: (notification) {
+          setState(() {
+            _currentIndex = notification.tabIndex;
+          });
+          return true;
+        },
+        child: IndexedStack(
+          index: _currentIndex,
+          children: _screens,
+        ),
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
