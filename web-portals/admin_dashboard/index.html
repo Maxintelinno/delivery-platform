@@ -303,6 +303,29 @@
 
           <!-- ACTIVE MERCHANTS PANE -->
           <div id="merchant-active-pane" class="hidden space-y-6">
+            <!-- Filter Bar -->
+            <div class="flex flex-wrap items-center justify-between gap-4 p-4 bg-brandCard/60 border border-brandBorder rounded-2xl">
+              <div class="flex items-center gap-3">
+                <span class="text-xs font-bold text-brandTextGrey uppercase tracking-wider">Sales Period:</span>
+                <select id="active-date-range" onchange="handleActiveDateFilterChange()" class="bg-brandBg border border-brandBorder rounded-xl px-3 py-1.5 text-sm font-bold text-brandGold focus:border-brandGold focus:outline-none">
+                  <option value="today">Today</option>
+                  <option value="yesterday">Yesterday</option>
+                  <option value="this-week">This Week</option>
+                  <option value="custom">Custom Date</option>
+                </select>
+                <!-- Custom Date Input Pane -->
+                <div id="custom-date-pane" class="hidden flex items-center gap-2">
+                  <input type="date" id="custom-start-date" class="bg-brandBg border border-brandBorder rounded-xl px-2 py-1 text-xs text-zinc-200 focus:outline-none">
+                  <span class="text-zinc-500 text-xs">to</span>
+                  <input type="date" id="custom-end-date" class="bg-brandBg border border-brandBorder rounded-xl px-2 py-1 text-xs text-zinc-200 focus:outline-none">
+                  <button onclick="applyCustomActiveDate()" class="px-3 py-1 bg-brandGold hover:bg-brandGold/90 text-brandBg text-xs font-bold rounded-lg transition-all">Apply</button>
+                </div>
+              </div>
+              <div class="text-xs text-brandTextGrey">
+                Sales statistics automatically recalculate based on the period.
+              </div>
+            </div>
+
             <div class="bg-brandCard border border-brandBorder rounded-2xl overflow-hidden">
               <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-brandBorder text-left">
@@ -311,7 +334,7 @@
                       <th scope="col" class="px-6 py-4">Store Details</th>
                       <th scope="col" class="px-6 py-4">Commission (GP)</th>
                       <th scope="col" class="px-6 py-4">Total Revenue</th>
-                      <th scope="col" class="px-6 py-4">Completed Orders</th>
+                      <th scope="col" class="px-6 py-4">Payout Status</th>
                       <th scope="col" class="px-6 py-4">Operating Status</th>
                       <th scope="col" class="px-6 py-4 text-right">Actions</th>
                     </tr>
@@ -700,6 +723,34 @@
       </div>
     </div>
 
+    <!-- MODAL: PAYOUT HISTORY -->
+    <div id="payout-modal" class="fixed inset-0 z-[110] hidden bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+      <div class="bg-[#121420] border border-brandBorder rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl">
+        <!-- Header -->
+        <div class="px-6 py-4 border-b border-brandBorder flex justify-between items-center bg-brandCard/40">
+          <div>
+            <h3 class="text-lg font-bold text-brandGold" id="payout-modal-title">Payout History</h3>
+            <p class="text-xs text-brandTextGrey" id="payout-modal-subtitle">Transfer history & disbursement logs</p>
+          </div>
+          <button onclick="closePayoutModal()" class="text-brandTextGrey hover:text-zinc-100">
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Content -->
+        <div class="p-6 space-y-4 max-h-[400px] overflow-y-auto" id="payout-history-content">
+          <!-- Dynamic history rows injected via JS -->
+        </div>
+
+        <!-- Footer Actions -->
+        <div class="px-6 py-4 border-t border-brandBorder flex justify-end bg-brandCard/20">
+          <button onclick="closePayoutModal()" class="px-4 py-2 border border-brandBorder hover:bg-brandBorder rounded-xl text-xs font-bold text-zinc-300 transition-all">Close</button>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <!-- SPA Logic (Vanilla JS) -->
@@ -757,12 +808,55 @@
 
     // State Model for Merchants
     const merchantsState = [
-      { id: 1, name: 'Burger Kingdom', type: 'Fast Food / Western', owner: 'Supachai L.', phone: '081-234-5678', gp: 30, status: 'PENDING', emoji: '🍔', revenue: 0, orders: 0, isOpen: false, isSuspended: false },
-      { id: 2, name: 'Ninja Noodle House', type: 'Asian / Ramen', owner: 'Kamura S.', phone: '089-987-6543', gp: 25, status: 'PENDING', emoji: '🍜', revenue: 0, orders: 0, isOpen: false, isSuspended: false },
-      { id: 3, name: 'Sweet Velvet Bakery', type: 'Dessert / Bakery', owner: 'Chalida T.', phone: '086-555-1212', gp: 30, status: 'PENDING', emoji: '🍰', revenue: 0, orders: 0, isOpen: false, isSuspended: false },
-      { id: 4, name: 'Classic Burger Hub', type: 'Fast Food / Western', owner: 'Jane Doe', phone: '085-111-2222', gp: 30, status: 'APPROVED', emoji: '🍔', revenue: 35000, orders: 120, isOpen: true, isSuspended: false },
-      { id: 5, name: 'Sushi Premium Bar', type: 'Japanese', owner: 'Kenji Y.', phone: '082-333-4444', gp: 25, status: 'APPROVED', emoji: '🍣', revenue: 58400, orders: 204, isOpen: true, isSuspended: false },
+      { id: 1, name: 'Burger Kingdom', type: 'Fast Food / Western', owner: 'Supachai L.', phone: '081-234-5678', gp: 30, status: 'PENDING', emoji: '🍔', revenue: 0, orders: 0, isOpen: false, isSuspended: false, payoutStatus: 'PENDING', payoutHistory: [] },
+      { id: 2, name: 'Ninja Noodle House', type: 'Asian / Ramen', owner: 'Kamura S.', phone: '089-987-6543', gp: 25, status: 'PENDING', emoji: '🍜', revenue: 0, orders: 0, isOpen: false, isSuspended: false, payoutStatus: 'PENDING', payoutHistory: [] },
+      { id: 3, name: 'Sweet Velvet Bakery', type: 'Dessert / Bakery', owner: 'Chalida T.', phone: '086-555-1212', gp: 30, status: 'PENDING', emoji: '🍰', revenue: 0, orders: 0, isOpen: false, isSuspended: false, payoutStatus: 'PENDING', payoutHistory: [] },
+      { id: 4, name: 'Classic Burger Hub', type: 'Fast Food / Western', owner: 'Jane Doe', phone: '085-111-2222', gp: 30, status: 'APPROVED', emoji: '🍔', revenue: 35000, orders: 120, isOpen: true, isSuspended: false, payoutStatus: 'PENDING',
+        payoutHistory: [
+          { date: '2026-07-22', amount: 15400, status: 'SUCCESS', transId: 'TRX-998822' },
+          { date: '2026-07-15', amount: 18200, status: 'SUCCESS', transId: 'TRX-887711' }
+        ],
+        revenueStats: { today: 4500, yesterday: 5200, 'this-week': 35000, custom: 12000 }
+      },
+      { id: 5, name: 'Sushi Premium Bar', type: 'Japanese', owner: 'Kenji Y.', phone: '082-333-4444', gp: 25, status: 'APPROVED', emoji: '🍣', revenue: 58400, orders: 204, isOpen: true, isSuspended: false, payoutStatus: 'PAID',
+        payoutHistory: [
+          { date: '2026-07-23', amount: 24500, status: 'SUCCESS', transId: 'TRX-112233' },
+          { date: '2026-07-16', amount: 33900, status: 'SUCCESS', transId: 'TRX-445566' }
+        ],
+        revenueStats: { today: 8900, yesterday: 7800, 'this-week': 58400, custom: 21000 }
+      },
     ];
+
+    let currentActivePeriod = 'this-week';
+
+    function handleActiveDateFilterChange() {
+      const select = document.getElementById('active-date-range');
+      const customPane = document.getElementById('custom-date-pane');
+      if (select.value === 'custom') {
+        customPane.classList.remove('hidden');
+      } else {
+        customPane.classList.add('hidden');
+        currentActivePeriod = select.value;
+        renderMerchants();
+      }
+    }
+
+    function applyCustomActiveDate() {
+      const start = document.getElementById('custom-start-date').value;
+      const end = document.getElementById('custom-end-date').value;
+      if (!start || !end) {
+        alert('Please select both start and end dates.');
+        return;
+      }
+      currentActivePeriod = 'custom';
+      // Simulate unique custom values for demo realism
+      merchantsState.forEach(m => {
+        if (m.status === 'APPROVED' && m.revenueStats) {
+          m.revenueStats.custom = Math.floor(Math.random() * 15000) + 8000;
+        }
+      });
+      renderMerchants();
+    }
 
     function renderMerchants() {
       const pendingBody = document.getElementById('merchant-pending-table-body');
@@ -810,50 +904,74 @@
       `).join('');
 
       // 2. Render Active Table
-      activeBody.innerHTML = activeList.map(m => `
-        <tr class="${m.isSuspended ? 'opacity-50' : ''}">
-          <td class="px-6 py-4 whitespace-nowrap">
-            <div class="flex items-center gap-3">
-              <span class="text-2xl">${m.emoji}</span>
-              <div>
-                <div class="font-bold text-zinc-100">${m.name}</div>
-                <div class="text-xs text-brandTextGrey">${m.type}</div>
+      activeBody.innerHTML = activeList.map(m => {
+        const rev = m.revenueStats ? (m.revenueStats[currentActivePeriod] || 0) : m.revenue;
+        const ords = Math.round(rev / 280);
+
+        const payoutBadge = m.payoutStatus === 'PAID'
+          ? `<span class="px-2 py-1 rounded bg-accentNeon/12 border border-accentNeon/20 text-[10px] font-bold text-accentNeon">PAID</span>`
+          : `<span class="px-2 py-1 rounded bg-amber-500/12 border border-amber-500/20 text-[10px] font-bold text-amber-400">PENDING</span>`;
+
+        const payoutAction = m.payoutStatus === 'PENDING'
+          ? `<button onclick="markAsPaid(${m.id})" class="px-2 py-1 bg-brandGold/15 hover:bg-brandGold text-brandGold hover:text-brandBg rounded-lg text-[10px] font-bold border border-brandGold/20 transition-all">Mark as Paid</button>`
+          : '';
+
+        return `
+          <tr class="${m.isSuspended ? 'opacity-50' : ''}">
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="flex items-center gap-3">
+                <span class="text-2xl">${m.emoji}</span>
+                <div>
+                  <div class="font-bold text-zinc-100">${m.name}</div>
+                  <div class="text-xs text-brandTextGrey">${m.type}</div>
+                </div>
               </div>
-            </div>
-          </td>
-          <td class="px-6 py-4 whitespace-nowrap">
-            <div class="flex items-center gap-2">
-              <input type="number" id="gp-${m.id}" value="${m.gp}" class="w-16 bg-brandBg border border-brandBorder rounded-lg px-2 py-1 text-center font-bold text-brandGold focus:border-brandGold focus:outline-none">
-              <span class="text-sm font-bold text-brandTextGrey">%</span>
-              <button onclick="saveCommission(${m.id})" class="p-1 hover:bg-brandBorder rounded-lg text-brandGold" title="Save Commission">
-                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-                </svg>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="flex items-center gap-2">
+                <input type="number" id="gp-${m.id}" value="${m.gp}" class="w-16 bg-brandBg border border-brandBorder rounded-lg px-2 py-1 text-center font-bold text-brandGold focus:border-brandGold focus:outline-none">
+                <span class="text-sm font-bold text-brandTextGrey">%</span>
+                <button onclick="saveCommission(${m.id})" class="p-1 hover:bg-brandBorder rounded-lg text-brandGold" title="Save Commission">
+                  <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                  </svg>
+                </button>
+              </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap font-mono text-zinc-200">
+              <div>฿${rev.toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
+              <div class="text-[10px] text-brandTextGrey">${ords} completed orders</div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="flex flex-col items-start gap-1.5">
+                ${payoutBadge}
+                <div class="flex gap-2">
+                  ${payoutAction}
+                  <button onclick="viewPayoutHistory(${m.id})" class="px-2 py-1 bg-brandBorder hover:bg-brandBorder/70 text-zinc-300 rounded-lg text-[10px] font-bold border border-brandBorder transition-all">History</button>
+                </div>
+              </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <button onclick="toggleMerchantOpen(${m.id})" class="px-2.5 py-1 rounded text-[10px] font-bold border transition-all ${
+                m.isOpen 
+                  ? 'bg-accentNeon/12 border-accentNeon/20 text-accentNeon hover:bg-coralRed/10 hover:border-coralRed/20 hover:text-coralRed' 
+                  : 'bg-coralRed/12 border-coralRed/20 text-coralRed hover:bg-accentNeon/10 hover:border-accentNeon/20 hover:text-accentNeon'
+              }">
+                ${m.isOpen ? 'OPEN' : 'CLOSED'}
               </button>
-            </div>
-          </td>
-          <td class="px-6 py-4 whitespace-nowrap font-mono text-zinc-200">฿${m.revenue.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-          <td class="px-6 py-4 whitespace-nowrap font-mono font-bold text-zinc-300">${m.orders}</td>
-          <td class="px-6 py-4 whitespace-nowrap">
-            <button onclick="toggleMerchantOpen(${m.id})" class="px-2.5 py-1 rounded text-[10px] font-bold border transition-all ${
-              m.isOpen 
-                ? 'bg-accentNeon/12 border-accentNeon/20 text-accentNeon hover:bg-coralRed/10 hover:border-coralRed/20 hover:text-coralRed' 
-                : 'bg-coralRed/12 border-coralRed/20 text-coralRed hover:bg-accentNeon/10 hover:border-accentNeon/20 hover:text-accentNeon'
-            }">
-              ${m.isOpen ? 'OPEN' : 'CLOSED'}
-            </button>
-          </td>
-          <td class="px-6 py-4 whitespace-nowrap text-right">
-            <button onclick="toggleMerchantSuspended(${m.id})" class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-              m.isSuspended 
-                ? 'bg-accentNeon/10 hover:bg-accentNeon text-accentNeon hover:text-brandBg' 
-                : 'bg-coralRed/10 hover:bg-coralRed text-coralRed hover:text-white'
-            }">
-              ${m.isSuspended ? 'Re-activate' : 'Suspend'}
-            </button>
-          </td>
-        </tr>
-      `).join('');
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-right">
+              <button onclick="toggleMerchantSuspended(${m.id})" class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                m.isSuspended 
+                  ? 'bg-accentNeon/10 hover:bg-accentNeon text-accentNeon hover:text-brandBg' 
+                  : 'bg-coralRed/10 hover:bg-coralRed text-coralRed hover:text-white'
+              }">
+                ${m.isSuspended ? 'Re-activate' : 'Suspend'}
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
     }
 
     function switchMerchantSubTab(subTab) {
@@ -959,6 +1077,63 @@
       alert(`Rider approved successfully! credentials added to fleet.`);
       const row = document.getElementById(`rider-row-${id}`);
       if (row) row.remove();
+    }
+
+    function markAsPaid(id) {
+      const merchant = merchantsState.find(m => m.id === id);
+      if (merchant) {
+        merchant.payoutStatus = 'PAID';
+        const gpRate = merchant.gp || 30;
+        const rev = merchant.revenueStats ? (merchant.revenueStats[currentActivePeriod] || 0) : merchant.revenue;
+        const netDisbursed = rev * (1 - gpRate / 100);
+        
+        // Add new log entry to payout history
+        const dateStr = new Date().toISOString().split('T')[0];
+        const trxId = 'TRX-' + Math.floor(100000 + Math.random() * 900000);
+        merchant.payoutHistory.unshift({
+          date: dateStr,
+          amount: netDisbursed,
+          status: 'SUCCESS',
+          transId: trxId
+        });
+        
+        renderMerchants();
+        alert(`Payout of ฿${netDisbursed.toLocaleString(undefined, {minimumFractionDigits: 2})} (after GP deduction) marked as paid to "${merchant.name}".`);
+      }
+    }
+
+    function viewPayoutHistory(id) {
+      const merchant = merchantsState.find(m => m.id === id);
+      if (merchant) {
+        document.getElementById('payout-modal-title').innerText = `Payout History: ${merchant.name}`;
+        const content = document.getElementById('payout-history-content');
+        if (merchant.payoutHistory.length === 0) {
+          content.innerHTML = `
+            <div class="text-center py-6 text-brandTextGrey text-sm">
+              No historical transfers recorded for this merchant.
+            </div>
+          `;
+        } else {
+          content.innerHTML = `
+            <div class="space-y-3">
+              ${merchant.payoutHistory.map(log => `
+                <div class="flex items-center justify-between p-3 bg-brandCard border border-brandBorder rounded-xl text-sm">
+                  <div>
+                    <div class="font-bold text-zinc-100">฿${log.amount.toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
+                    <div class="text-xs text-brandTextGrey font-mono mt-0.5">${log.transId} ● ${log.date}</div>
+                  </div>
+                  <span class="px-2 py-0.5 text-[10px] font-bold text-accentNeon bg-accentNeon/12 border border-accentNeon/20 rounded">SUCCESS</span>
+                </div>
+              `).join('')}
+            </div>
+          `;
+        }
+        document.getElementById('payout-modal').classList.remove('hidden');
+      }
+    }
+
+    function closePayoutModal() {
+      document.getElementById('payout-modal').classList.add('hidden');
     }
 
     // Financial actions
