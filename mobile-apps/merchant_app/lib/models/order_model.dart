@@ -116,3 +116,13 @@ class Order {
     return orderItems.map((item) => '${item.quantity}x ${item.menuName}').join(', ');
   }
 }
+
+class MerchantHistoryResponse {
+  final List<Order> orders;
+  final double totalRevenue;
+
+  MerchantHistoryResponse({
+    required this.orders,
+    required this.totalRevenue,
+  });
+}

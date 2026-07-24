@@ -30,8 +30,12 @@ class Order {
   final int customerId;
   final int merchantId;
   final String merchantName;
+  final double merchantLatitude;
+  final double merchantLongitude;
   final double totalAmount;
   final String deliveryAddress;
+  final double deliveryLatitude;
+  final double deliveryLongitude;
   final String status;
   final List<OrderItem> orderItems;
 
@@ -40,8 +44,12 @@ class Order {
     required this.customerId,
     required this.merchantId,
     required this.merchantName,
+    required this.merchantLatitude,
+    required this.merchantLongitude,
     required this.totalAmount,
     required this.deliveryAddress,
+    required this.deliveryLatitude,
+    required this.deliveryLongitude,
     required this.status,
     required this.orderItems,
   });
@@ -55,8 +63,12 @@ class Order {
       customerId: json['customerId'] ?? 0,
       merchantId: json['merchantId'] ?? 0,
       merchantName: merchant['name'] ?? 'Cafe Bistro',
+      merchantLatitude: (merchant['latitude'] as num?)?.toDouble() ?? 13.736717,
+      merchantLongitude: (merchant['longitude'] as num?)?.toDouble() ?? 100.523186,
       totalAmount: (json['totalAmount'] as num?)?.toDouble() ?? 0.0,
       deliveryAddress: json['deliveryAddress'] ?? '',
+      deliveryLatitude: (json['deliveryLatitude'] as num?)?.toDouble() ?? 13.756331,
+      deliveryLongitude: (json['deliveryLongitude'] as num?)?.toDouble() ?? 100.501765,
       status: json['status'] ?? 'PENDING',
       orderItems: items,
     );
@@ -71,4 +83,14 @@ class Order {
   String get itemsSummary {
     return orderItems.map((item) => '${item.quantity}x ${item.menuName}').join(', ');
   }
+}
+
+class RiderHistoryResponse {
+  final List<Order> orders;
+  final double totalAmount;
+
+  RiderHistoryResponse({
+    required this.orders,
+    required this.totalAmount,
+  });
 }

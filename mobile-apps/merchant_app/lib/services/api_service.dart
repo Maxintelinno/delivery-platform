@@ -37,4 +37,28 @@ class ApiService {
       throw Exception('Failed to update order status: $e');
     }
   }
+
+  Future<MerchantHistoryResponse> fetchMerchantHistory(int merchantId, {String? date}) async {
+    try {
+      String url = '$_baseUrl/merchant/$merchantId/history';
+      if (date != null && date.isNotEmpty) {
+        url += '?date=$date';
+      }
+      final response = await http.get(Uri.parse(url));
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(response.body);
+        print('[Merchant App Debug] Raw API Response: ${response.body}');
+        final List<dynamic> ordersList = data['orders'] ?? [];
+        final List<Order> orders = ordersList.map((item) => Order.fromJson(item)).toList();
+        final double totalRevenue = (data['totalRevenue'] as num?)?.toDouble() ?? 0.0;
+        print('[Merchant App Debug] Parsed totalRevenue: $totalRevenue, Orders count: ${orders.length}');
+        return MerchantHistoryResponse(orders: orders, totalRevenue: totalRevenue);
+      } else {
+        throw Exception('Failed to load merchant history: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Failed to fetch merchant history: $e');
+    }
+  }
 }

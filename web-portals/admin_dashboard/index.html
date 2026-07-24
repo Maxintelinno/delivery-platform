@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-[#0B0D17]">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Food Delivery Platform - Admin Portal</title>
+  <!-- Tailwind CSS v3 -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js for premium analytics -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Inter Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            brandBg: '#0B0D17',
+            brandCard: '#161926',
+            brandGold: '#DFB76C',
+            brandBorder: '#262A3D',
+            brandTextGrey: '#94A3B8',
+            accentNeon: '#39FF14',
+            coralRed: '#F87171',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Premium dark mode scrollbar styling */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0B0D17;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #262A3D;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #DFB76C;
+    }
+  </style>
+</head>
+<body class="h-full text-zinc-100 font-sans antialiased overflow-hidden">
+
+  <!-- Main Layout Container -->
+  <div class="flex h-full overflow-hidden" id="app" x-data="adminDashboardState()">
+    
+    <!-- Left Sidebar (Responsive drawer) -->
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-[#0F101A] border-r border-brandBorder transition-transform duration-300 transform -translate-x-full lg:translate-x-0 lg:static lg:inset-auto lg:z-0">
+      <!-- Sidebar Header -->
+      <div class="flex h-16 items-center px-6 border-b border-brandBorder gap-2">
+        <div class="w-8 h-8 rounded-lg bg-brandGold flex items-center justify-center text-brandBg font-extrabold text-lg">A</div>
+        <span class="text-lg font-extrabold tracking-wider text-zinc-100">ADMIN <span class="text-brandGold">PORTAL</span></span>
+      </div>
+
+      <!-- Navigation Links -->
+      <nav class="flex-1 space-y-1 px-4 py-6 overflow-y-auto">
+        <button onclick="switchTab('overview')" id="nav-overview" class="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all duration-200 bg-brandGold/10 text-brandGold border border-brandGold/20">
+          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z" />
+          </svg>
+          Dashboard
+        </button>
+
+        <button onclick="switchTab('merchants')" id="nav-merchants" class="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all duration-200 text-brandTextGrey hover:text-zinc-100 hover:bg-brandCard/40">
+          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+          </svg>
+          Merchants
+        </button>
+
+        <button onclick="switchTab('riders')" id="nav-riders" class="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all duration-200 text-brandTextGrey hover:text-zinc-100 hover:bg-brandCard/40">
+          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+          </svg>
+          Riders Fleet
+        </button>
+
+        <button onclick="switchTab('financials')" id="nav-financials" class="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all duration-200 text-brandTextGrey hover:text-zinc-100 hover:bg-brandCard/40">
+          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          Financials
+        </button>
+      </nav>
+
+      <!-- Sidebar Footer User Profile -->
+      <div class="p-4 border-t border-brandBorder bg-brandCard/20">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-brandGold/20 flex items-center justify-center border border-brandGold/30 text-brandGold font-bold">AD</div>
+          <div>
+            <div class="text-sm font-bold text-zinc-200">Admin Staff</div>
+            <div class="text-xs text-brandTextGrey">Platform Master</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Panel Wrapper -->
+    <div class="flex flex-1 flex-col overflow-hidden">
+      
+      <!-- Top Header -->
+      <header class="flex h-16 items-center justify-between px-6 bg-[#0F101A] border-b border-brandBorder z-40">
+        <button onclick="toggleSidebar()" class="lg:hidden text-brandGold hover:text-zinc-100 focus:outline-none">
+          <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+
+        <div class="flex items-center gap-4 w-full max-w-md">
+          <svg class="h-5 w-5 text-brandTextGrey" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <input type="text" placeholder="Search orders, merchants, riders..." class="w-full bg-transparent text-sm border-0 text-zinc-100 placeholder-brandTextGrey focus:outline-none focus:ring-0">
+        </div>
+
+        <div class="flex items-center gap-4">
+          <!-- Notification Bell -->
+          <button class="relative p-2 text-brandTextGrey hover:text-zinc-100 rounded-lg hover:bg-brandCard transition-all">
+            <div class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-coralRed animate-pulse"></div>
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- Main Tab Content Area -->
+      <main class="flex-1 overflow-y-auto bg-brandBg p-6 relative">
+
+        <!-- TAB 1: OVERVIEW -->
+        <div id="tab-overview" class="space-y-6">
+          <div class="flex items-center justify-between">
+            <h1 class="text-2xl font-extrabold tracking-tight">Overview Dashboard</h1>
+            <div class="text-sm font-semibold text-brandGold bg-brandGold/10 px-4 py-2 rounded-xl border border-brandGold/20">Real-time status</div>
+          </div>
+
+          <!-- KPI Cards Grid -->
+          <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            <!-- Revenue Card -->
+            <div class="bg-brandCard border border-brandBorder rounded-2xl p-6 relative overflow-hidden group hover:border-brandGold/40 transition-all duration-300">
+              <div class="absolute -right-6 -bottom-6 w-24 h-24 rounded-full bg-brandGold/5 group-hover:scale-150 transition-all duration-500"></div>
+              <div class="flex items-center justify-between mb-4">
+                <span class="text-sm font-bold text-brandTextGrey uppercase tracking-wider">Today's Revenue</span>
+                <span class="p-2 rounded-xl bg-brandGold/15 text-brandGold">
+                  <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </span>
+              </div>
+              <div class="text-3xl font-extrabold text-zinc-100">฿124,500.00</div>
+              <p class="text-xs font-semibold text-accentNeon mt-2 flex items-center gap-1">
+                <span>↑ 14.5%</span> <span class="text-brandTextGrey">vs yesterday</span>
+              </p>
+            </div>
+
+            <!-- Orders Card -->
+            <div class="bg-brandCard border border-brandBorder rounded-2xl p-6 relative overflow-hidden group hover:border-brandGold/40 transition-all duration-300">
+              <div class="absolute -right-6 -bottom-6 w-24 h-24 rounded-full bg-accentNeon/5 group-hover:scale-150 transition-all duration-500"></div>
+              <div class="flex items-center justify-between mb-4">
+                <span class="text-sm font-bold text-brandTextGrey uppercase tracking-wider">Total Orders</span>
+                <span class="p-2 rounded-xl bg-accentNeon/15 text-accentNeon">
+                  <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                  </svg>
+                </span>
+              </div>
+              <div class="text-3xl font-extrabold text-zinc-100">842</div>
+              <p class="text-xs font-semibold text-accentNeon mt-2 flex items-center gap-1">
+                <span>↑ 12.4%</span> <span class="text-brandTextGrey">vs yesterday</span>
+              </p>
+            </div>
+
+            <!-- Active Merchants Card -->
+            <div class="bg-brandCard border border-brandBorder rounded-2xl p-6 relative overflow-hidden group hover:border-brandGold/40 transition-all duration-300">
+              <div class="absolute -right-6 -bottom-6 w-24 h-24 rounded-full bg-blue-500/5 group-hover:scale-150 transition-all duration-500"></div>
+              <div class="flex items-center justify-between mb-4">
+                <span class="text-sm font-bold text-brandTextGrey uppercase tracking-wider">Active Stores</span>
+                <span class="p-2 rounded-xl bg-blue-500/15 text-blue-400">
+                  <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
+                </span>
+              </div>
+              <div class="text-3xl font-extrabold text-zinc-100">48</div>
+              <p class="text-xs font-semibold text-brandTextGrey mt-2 flex items-center gap-1">
+                <span>Station: 1 active hub</span>
+              </p>
+            </div>
+
+            <!-- Online Riders Card -->
+            <div class="bg-brandCard border border-brandBorder rounded-2xl p-6 relative overflow-hidden group hover:border-brandGold/40 transition-all duration-300">
+              <div class="absolute -right-6 -bottom-6 w-24 h-24 rounded-full bg-coralRed/5 group-hover:scale-150 transition-all duration-500"></div>
+              <div class="flex items-center justify-between mb-4">
+                <span class="text-sm font-bold text-brandTextGrey uppercase tracking-wider">Riders Online</span>
+                <span class="p-2 rounded-xl bg-coralRed/15 text-coralRed">
+                  <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                  </svg>
+                </span>
+              </div>
+              <div class="text-3xl font-extrabold text-zinc-100">18</div>
+              <p class="text-xs font-semibold text-accentNeon mt-2 flex items-center gap-1">
+                <span>● 12 active tasks</span>
+              </p>
+            </div>
+          </div>
+
+          <!-- Charts & Stats Grid -->
+          <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <!-- Weekly revenue graph -->
+            <div class="lg:col-span-2 bg-brandCard border border-brandBorder rounded-2xl p-6">
+              <div class="flex items-center justify-between mb-6">
+                <h3 class="text-lg font-bold">Revenue Insights</h3>
+                <span class="text-xs text-brandTextGrey">Weekly sales chart</span>
+              </div>
+              <div class="h-72 w-full flex items-center justify-center relative">
+                <canvas id="revenueChart"></canvas>
+              </div>
+            </div>
+
+            <!-- Real-time Order Actions logs -->
+            <div class="bg-brandCard border border-brandBorder rounded-2xl p-6 flex flex-col h-[380px]">
+              <h3 class="text-lg font-bold mb-4">Live Platform Activity</h3>
+              <div class="flex-1 overflow-y-auto space-y-4 pr-1">
+                <div class="flex gap-3 border-l-2 border-brandGold pl-3 py-1">
+                  <div class="text-xs text-brandTextGrey font-semibold">11:24</div>
+                  <div class="text-sm">
+                    <strong class="text-zinc-200">Rider Accepted:</strong> Order <span class="text-brandGold font-bold">#18</span> accepted by Somchai S.
+                  </div>
+                </div>
+                <div class="flex gap-3 border-l-2 border-accentNeon pl-3 py-1">
+                  <div class="text-xs text-brandTextGrey font-semibold">11:20</div>
+                  <div class="text-sm">
+                    <strong class="text-zinc-200">Food Ready:</strong> <span class="text-accentNeon font-bold">Burger Cafe</span> finished order #18.
+                  </div>
+                </div>
+                <div class="flex gap-3 border-l-2 border-brandBorder pl-3 py-1">
+                  <div class="text-xs text-brandTextGrey font-semibold">11:15</div>
+                  <div class="text-sm">
+                    <strong class="text-zinc-200">Merchant Approved:</strong> Sushi Bar was approved by Admin.
+                  </div>
+                </div>
+                <div class="flex gap-3 border-l-2 border-coralRed pl-3 py-1">
+                  <div class="text-xs text-brandTextGrey font-semibold">11:08</div>
+                  <div class="text-sm">
+                    <strong class="text-zinc-200">New Store Application:</strong> Pizza Mania submitted documents.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: MERCHANTS -->
+        <div id="tab-merchants" class="hidden space-y-6">
+          <div class="flex items-center justify-between">
+            <h1 class="text-2xl font-extrabold tracking-tight">Merchant Verification & Config</h1>
+            <div class="text-xs font-semibold text-brandGold bg-brandGold/10 px-4 py-2 rounded-xl border border-brandGold/20">Pending validation</div>
+          </div>
+
+          <!-- Pending Merchants list table -->
+          <div class="bg-brandCard border border-brandBorder rounded-2xl overflow-hidden">
+            <div class="px-6 py-4 border-b border-brandBorder flex justify-between items-center">
+              <h3 class="font-bold">Pending Merchant Verification (3)</h3>
+            </div>
+            
+            <div class="overflow-x-auto">
+              <table class="min-w-full divide-y divide-brandBorder text-left">
+                <thead class="bg-[#0B0D17]/40 text-xs font-bold text-brandTextGrey uppercase tracking-wider">
+                  <tr>
+                    <th scope="col" class="px-6 py-4">Store Details</th>
+                    <th scope="col" class="px-6 py-4">Owner Name</th>
+                    <th scope="col" class="px-6 py-4">Phone Number</th>
+                    <th scope="col" class="px-6 py-4">Commission (GP)</th>
+                    <th scope="col" class="px-6 py-4">Documents</th>
+                    <th scope="col" class="px-6 py-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-brandBorder" id="merchant-table-body">
+                  <!-- Row 1 -->
+                  <tr id="merchant-row-1">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="flex items-center gap-3">
+                        <span class="text-2xl">🍔</span>
+                        <div>
+                          <div class="font-bold text-zinc-100">Burger Kingdom</div>
+                          <div class="text-xs text-brandTextGrey">Fast Food / Western</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap font-medium text-zinc-200">Supachai L.</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-brandTextGrey font-mono">081-234-5678</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="flex items-center gap-2">
+                        <input type="number" id="gp-1" value="30" class="w-16 bg-brandBg border border-brandBorder rounded-lg px-2 py-1 text-center font-bold text-brandGold focus:border-brandGold focus:outline-none">
+                        <span class="text-sm font-bold text-brandTextGrey">%</span>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <button onclick="openDocModal('Burger Kingdom', 'Supachai L.')" class="px-3 py-1.5 bg-brandBg hover:bg-brandBorder border border-brandBorder rounded-xl text-xs font-semibold text-brandGold flex items-center gap-2 transition-all">
+                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        View (3)
+                      </button>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right space-x-2">
+                      <button onclick="rejectMerchant(1)" class="px-3 py-1.5 bg-coralRed/10 hover:bg-coralRed text-coralRed hover:text-white rounded-xl text-xs font-bold transition-all">Reject</button>
+                      <button onclick="approveMerchant(1)" class="px-3 py-1.5 bg-accentNeon/10 hover:bg-accentNeon text-accentNeon hover:text-brandBg rounded-xl text-xs font-bold transition-all">Approve</button>
+                    </td>
+                  </tr>
+                  <!-- Row 2 -->
+                  <tr id="merchant-row-2">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="flex items-center gap-3">
+                        <span class="text-2xl">🍜</span>
+                        <div>
+                          <div class="font-bold text-zinc-100">Ninja Noodle House</div>
+                          <div class="text-xs text-brandTextGrey">Asian / Ramen</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap font-medium text-zinc-200">Kamura S.</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-brandTextGrey font-mono">089-987-6543</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="flex items-center gap-2">
+                        <input type="number" id="gp-2" value="25" class="w-16 bg-brandBg border border-brandBorder rounded-lg px-2 py-1 text-center font-bold text-brandGold focus:border-brandGold focus:outline-none">
+                        <span class="text-sm font-bold text-brandTextGrey">%</span>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <button onclick="openDocModal('Ninja Noodle House', 'Kamura S.')" class="px-3 py-1.5 bg-brandBg hover:bg-brandBorder border border-brandBorder rounded-xl text-xs font-semibold text-brandGold flex items-center gap-2 transition-all">
+                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        View (3)
+                      </button>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right space-x-2">
+                      <button onclick="rejectMerchant(2)" class="px-3 py-1.5 bg-coralRed/10 hover:bg-coralRed text-coralRed hover:text-white rounded-xl text-xs font-bold transition-all">Reject</button>
+                      <button onclick="approveMerchant(2)" class="px-3 py-1.5 bg-accentNeon/10 hover:bg-accentNeon text-accentNeon hover:text-brandBg rounded-xl text-xs font-bold transition-all">Approve</button>
+                    </td>
+                  </tr>
+                  <!-- Row 3 -->
+                  <tr id="merchant-row-3">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="flex items-center gap-3">
+                        <span class="text-2xl">🍰</span>
+                        <div>
+                          <div class="font-bold text-zinc-100">Sweet Velvet Bakery</div>
+                          <div class="text-xs text-brandTextGrey">Dessert / Bakery</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap font-medium text-zinc-200">Chalida T.</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-brandTextGrey font-mono">086-555-1212</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="flex items-center gap-2">
+                        <input type="number" id="gp-3" value="30" class="w-16 bg-brandBg border border-brandBorder rounded-lg px-2 py-1 text-center font-bold text-brandGold focus:border-brandGold focus:outline-none">
+                        <span class="text-sm font-bold text-brandTextGrey">%</span>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <button onclick="openDocModal('Sweet Velvet Bakery', 'Chalida T.')" class="px-3 py-1.5 bg-brandBg hover:bg-brandBorder border border-brandBorder rounded-xl text-xs font-semibold text-brandGold flex items-center gap-2 transition-all">
+                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        View (3)
+                      </button>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right space-x-2">
+                      <button onclick="rejectMerchant(3)" class="px-3 py-1.5 bg-coralRed/10 hover:bg-coralRed text-coralRed hover:text-white rounded-xl text-xs font-bold transition-all">Reject</button>
+                      <button onclick="approveMerchant(3)" class="px-3 py-1.5 bg-accentNeon/10 hover:bg-accentNeon text-accentNeon hover:text-brandBg rounded-xl text-xs font-bold transition-all">Approve</button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 3: RIDERS -->
+        <div id="tab-riders" class="hidden space-y-6">
+          <div class="flex items-center justify-between">
+            <h1 class="text-2xl font-extrabold tracking-tight">Rider Verification & Fleet Monitoring</h1>
+            <div class="text-sm font-semibold text-brandGold bg-brandGold/10 px-4 py-2 rounded-xl border border-brandGold/20">Operational view</div>
+          </div>
+
+          <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <!-- Left Side: Pending Riders approval -->
+            <div class="lg:col-span-2 bg-brandCard border border-brandBorder rounded-2xl overflow-hidden">
+              <div class="px-6 py-4 border-b border-brandBorder">
+                <h3 class="font-bold">Pending Rider Applications (2)</h3>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-brandBorder text-left">
+                  <thead class="bg-[#0B0D17]/40 text-xs font-bold text-brandTextGrey uppercase tracking-wider">
+                    <tr>
+                      <th class="px-6 py-4">Rider Profile</th>
+                      <th class="px-6 py-4">License Type</th>
+                      <th class="px-6 py-4">Documents</th>
+                      <th class="px-6 py-4 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-brandBorder" id="rider-table-body">
+                    <!-- Rider 1 -->
+                    <tr id="rider-row-1">
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center gap-3">
+                          <div class="w-10 h-10 rounded-full bg-brandBorder flex items-center justify-center font-bold">WS</div>
+                          <div>
+                            <div class="font-bold">Wichai Srisuwan</div>
+                            <div class="text-xs text-brandTextGrey">Motorcycle Fleet</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap font-medium">Class A Driver License</td>
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        <button onclick="openRiderDocModal('Wichai Srisuwan')" class="px-3 py-1.5 bg-brandBg border border-brandBorder hover:bg-brandBorder rounded-xl text-xs font-bold text-brandGold transition-all">View Docs (2)</button>
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-right space-x-2">
+                        <button onclick="rejectRider(1)" class="px-3 py-1.5 bg-coralRed/10 hover:bg-coralRed text-coralRed hover:text-white rounded-xl text-xs font-bold transition-all">Reject</button>
+                        <button onclick="approveRider(1)" class="px-3 py-1.5 bg-accentNeon/10 hover:bg-accentNeon text-accentNeon hover:text-brandBg rounded-xl text-xs font-bold transition-all">Approve</button>
+                      </td>
+                    </tr>
+                    <!-- Rider 2 -->
+                    <tr id="rider-row-2">
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center gap-3">
+                          <div class="w-10 h-10 rounded-full bg-brandBorder flex items-center justify-center font-bold">PN</div>
+                          <div>
+                            <div class="font-bold">Preecha N.</div>
+                            <div class="text-xs text-brandTextGrey">Motorcycle Fleet</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap font-medium">Class A Driver License</td>
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        <button onclick="openRiderDocModal('Preecha N.')" class="px-3 py-1.5 bg-brandBg border border-brandBorder hover:bg-brandBorder rounded-xl text-xs font-bold text-brandGold transition-all">View Docs (2)</button>
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-right space-x-2">
+                        <button onclick="rejectRider(2)" class="px-3 py-1.5 bg-coralRed/10 hover:bg-coralRed text-coralRed hover:text-white rounded-xl text-xs font-bold transition-all">Reject</button>
+                        <button onclick="approveRider(2)" class="px-3 py-1.5 bg-accentNeon/10 hover:bg-accentNeon text-accentNeon hover:text-brandBg rounded-xl text-xs font-bold transition-all">Approve</button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Right Side: Live Fleet Monitoring Status -->
+            <div class="bg-brandCard border border-brandBorder rounded-2xl p-6 flex flex-col">
+              <div class="flex justify-between items-center mb-4">
+                <h3 class="font-bold">Live Fleet Status (5)</h3>
+                <span class="w-2.5 h-2.5 rounded-full bg-accentNeon animate-pulse"></span>
+              </div>
+              
+              <div class="space-y-4 overflow-y-auto max-h-[380px] pr-1">
+                <!-- Fleet Card 1 -->
+                <div class="p-3 bg-brandBg/60 border border-brandBorder rounded-xl flex items-center justify-between">
+                  <div>
+                    <div class="font-bold text-zinc-200">Akkara P.</div>
+                    <div class="text-xs text-brandTextGrey">Coord: 13.7563, 100.5018</div>
+                  </div>
+                  <span class="px-2 py-1 rounded bg-blue-500/12 border border-blue-500/20 text-[10px] font-bold text-blue-400">DELIVERING</span>
+                </div>
+                <!-- Fleet Card 2 -->
+                <div class="p-3 bg-brandBg/60 border border-brandBorder rounded-xl flex items-center justify-between">
+                  <div>
+                    <div class="font-bold text-zinc-200">Nirut S.</div>
+                    <div class="text-xs text-brandTextGrey">Coord: 13.7367, 100.5231</div>
+                  </div>
+                  <span class="px-2 py-1 rounded bg-accentNeon/12 border border-accentNeon/20 text-[10px] font-bold text-accentNeon">ONLINE (IDLE)</span>
+                </div>
+                <!-- Fleet Card 3 -->
+                <div class="p-3 bg-brandBg/60 border border-brandBorder rounded-xl flex items-center justify-between">
+                  <div>
+                    <div class="font-bold text-zinc-200">Chatchai J.</div>
+                    <div class="text-xs text-brandTextGrey">Coord: 13.7291, 100.5367</div>
+                  </div>
+                  <span class="px-2 py-1 rounded bg-amber-500/12 border border-amber-500/20 text-[10px] font-bold text-amber-400">WAITING PICKUP</span>
+                </div>
+                <!-- Fleet Card 4 -->
+                <div class="p-3 bg-brandBg/60 border border-brandBorder rounded-xl opacity-60 flex items-center justify-between">
+                  <div>
+                    <div class="font-bold text-zinc-200">Somporn D.</div>
+                    <div class="text-xs text-brandTextGrey">Last Active: 12 mins ago</div>
+                  </div>
+                  <span class="px-2 py-1 rounded bg-brandBorder border border-brandBorder text-[10px] font-bold text-brandTextGrey">OFFLINE</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 4: FINANCIALS -->
+        <div id="tab-financials" class="hidden space-y-6">
+          <div class="flex items-center justify-between">
+            <h1 class="text-2xl font-extrabold tracking-tight">Merchant Settlement Ledger</h1>
+            <div class="text-sm font-semibold text-brandGold bg-brandGold/10 px-4 py-2 rounded-xl border border-brandGold/20">Cycles: Daily</div>
+          </div>
+
+          <!-- Settlements Table -->
+          <div class="bg-brandCard border border-brandBorder rounded-2xl overflow-hidden">
+            <div class="px-6 py-4 border-b border-brandBorder flex justify-between items-center">
+              <h3 class="font-bold">Pending Payout Disbursements</h3>
+              <button onclick="disburseAllPayouts()" class="px-4 py-2 bg-brandGold hover:bg-brandGold/90 text-brandBg font-bold rounded-xl text-xs transition-all shadow-lg shadow-brandGold/10 flex items-center gap-2">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                Disburse All
+              </button>
+            </div>
+            
+            <div class="overflow-x-auto">
+              <table class="min-w-full divide-y divide-brandBorder text-left">
+                <thead class="bg-[#0B0D17]/40 text-xs font-bold text-brandTextGrey uppercase tracking-wider">
+                  <tr>
+                    <th scope="col" class="px-6 py-4">Merchant Name</th>
+                    <th scope="col" class="px-6 py-4">Gross Sales</th>
+                    <th scope="col" class="px-6 py-4">Commission (GP%)</th>
+                    <th scope="col" class="px-6 py-4">Commission Deducted</th>
+                    <th scope="col" class="px-6 py-4">Net Payout Amount</th>
+                    <th scope="col" class="px-6 py-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-brandBorder" id="settlement-table-body">
+                  <!-- Row 1 -->
+                  <tr>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="font-bold text-zinc-100">Classic Burger Hub</div>
+                      <div class="text-xs text-brandTextGrey">ID: #MERT-001</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap font-mono text-zinc-200">฿35,000.00</td>
+                    <td class="px-6 py-4 whitespace-nowrap font-bold text-brandGold">30%</td>
+                    <td class="px-6 py-4 whitespace-nowrap font-mono text-coralRed">-฿10,500.00</td>
+                    <td class="px-6 py-4 whitespace-nowrap font-mono text-accentNeon font-bold">฿24,500.00</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right">
+                      <button onclick="disbursePayout(this, 24500)" class="px-3 py-1.5 bg-brandGold/15 hover:bg-brandGold text-brandGold hover:text-brandBg rounded-xl text-xs font-bold transition-all border border-brandGold/20">Transfer</button>
+                    </td>
+                  </tr>
+                  <!-- Row 2 -->
+                  <tr>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="font-bold text-zinc-100">Sushi Premium Bar</div>
+                      <div class="text-xs text-brandTextGrey">ID: #MERT-002</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap font-mono text-zinc-200">฿58,400.00</td>
+                    <td class="px-6 py-4 whitespace-nowrap font-bold text-brandGold">25%</td>
+                    <td class="px-6 py-4 whitespace-nowrap font-mono text-coralRed">-฿14,600.00</td>
+                    <td class="px-6 py-4 whitespace-nowrap font-mono text-accentNeon font-bold">฿43,800.00</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right">
+                      <button onclick="disbursePayout(this, 43800)" class="px-3 py-1.5 bg-brandGold/15 hover:bg-brandGold text-brandGold hover:text-brandBg rounded-xl text-xs font-bold transition-all border border-brandGold/20">Transfer</button>
+                    </td>
+                  </tr>
+                  <!-- Row 3 -->
+                  <tr>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="font-bold text-zinc-100">Pizza Romano</div>
+                      <div class="text-xs text-brandTextGrey">ID: #MERT-003</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap font-mono text-zinc-200">฿31,100.00</td>
+                    <td class="px-6 py-4 whitespace-nowrap font-bold text-brandGold">30%</td>
+                    <td class="px-6 py-4 whitespace-nowrap font-mono text-coralRed">-฿9,330.00</td>
+                    <td class="px-6 py-4 whitespace-nowrap font-mono text-accentNeon font-bold">฿21,770.00</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right">
+                      <button onclick="disbursePayout(this, 21770)" class="px-3 py-1.5 bg-brandGold/15 hover:bg-brandGold text-brandGold hover:text-brandBg rounded-xl text-xs font-bold transition-all border border-brandGold/20">Transfer</button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </main>
+    </div>
+
+    <!-- MODAL: MERCHANT DOCUMENT VERIFICATION -->
+    <div id="doc-modal" class="fixed inset-0 z-[100] hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+      <div class="bg-[#121420] border border-brandBorder rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+        
+        <!-- Header -->
+        <div class="px-6 py-4 border-b border-brandBorder flex justify-between items-center bg-brandCard/40">
+          <div>
+            <h3 class="text-lg font-bold text-zinc-100" id="modal-title">Verification Documents</h3>
+            <p class="text-xs text-brandTextGrey" id="modal-subtitle">Pending merchant verification audit</p>
+          </div>
+          <button onclick="closeDocModal()" class="text-brandTextGrey hover:text-zinc-100">
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Document Mockups Grid -->
+        <div class="p-6 space-y-6 max-h-[500px] overflow-y-auto">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            
+            <!-- Document 1: ID Card -->
+            <div class="border border-brandBorder rounded-xl overflow-hidden bg-brandCard/50 flex flex-col">
+              <div class="p-3 border-b border-brandBorder text-xs font-bold text-zinc-300">1. Owner ID Card</div>
+              <div class="flex-1 h-32 flex items-center justify-center bg-slate-900/60 relative p-4">
+                <!-- SVG simulated ID Card -->
+                <div class="w-full h-full bg-[#1e293b]/70 border border-slate-700/60 rounded-md p-2 flex flex-col justify-between">
+                  <div class="flex gap-2">
+                    <div class="w-4 h-4 rounded bg-brandGold flex items-center justify-center text-[8px] text-brandBg">✓</div>
+                    <div class="flex-1 space-y-1">
+                      <div class="w-10 h-1 bg-zinc-400 rounded"></div>
+                      <div class="w-16 h-1 bg-zinc-500 rounded"></div>
+                    </div>
+                  </div>
+                  <div class="w-full h-2 bg-brandGold/20 rounded"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Document 2: Bank Statement -->
+            <div class="border border-brandBorder rounded-xl overflow-hidden bg-brandCard/50 flex flex-col">
+              <div class="p-3 border-b border-brandBorder text-xs font-bold text-zinc-300">2. Bank Statement</div>
+              <div class="flex-1 h-32 flex items-center justify-center bg-slate-900/60 relative p-4">
+                <!-- SVG simulated Statement -->
+                <div class="w-full h-full bg-[#1e293b]/70 border border-slate-700/60 rounded-md p-2 flex flex-col gap-2">
+                  <div class="flex justify-between items-center">
+                    <div class="w-8 h-2 bg-brandGold rounded"></div>
+                    <div class="w-8 h-2 bg-zinc-500 rounded"></div>
+                  </div>
+                  <div class="space-y-1">
+                    <div class="w-full h-1 bg-zinc-600 rounded"></div>
+                    <div class="w-full h-1 bg-zinc-600 rounded"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Document 3: Business License -->
+            <div class="border border-brandBorder rounded-xl overflow-hidden bg-brandCard/50 flex flex-col">
+              <div class="p-3 border-b border-brandBorder text-xs font-bold text-zinc-300">3. Business Registration</div>
+              <div class="flex-1 h-32 flex items-center justify-center bg-slate-900/60 relative p-4">
+                <!-- SVG simulated Company License -->
+                <div class="w-full h-full bg-[#1e293b]/70 border border-slate-700/60 rounded-md p-2 flex flex-col justify-between">
+                  <div class="flex items-center justify-center flex-1">
+                    <div class="w-8 h-8 rounded-full border border-brandGold/40 border-dashed flex items-center justify-center text-[10px] text-brandGold font-mono">SEAL</div>
+                  </div>
+                  <div class="w-full h-1 bg-zinc-500 rounded"></div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Document details audit note -->
+          <div class="p-4 bg-brandGold/5 border border-brandGold/20 rounded-xl text-xs text-brandTextGrey leading-relaxed">
+            <strong class="text-brandGold">Verification Notice:</strong> Make sure the owner's legal name matches the bank book account holder and ID card. Discrepancies should be rejected with comments.
+          </div>
+        </div>
+
+        <!-- Footer Actions -->
+        <div class="px-6 py-4 border-t border-brandBorder flex justify-end gap-3 bg-brandCard/20">
+          <button onclick="closeDocModal()" class="px-4 py-2 border border-brandBorder hover:bg-brandBorder rounded-xl text-xs font-bold text-zinc-300 transition-all">Close</button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- MODAL: RIDER DOCUMENT VERIFICATION -->
+    <div id="rider-doc-modal" class="fixed inset-0 z-[100] hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+      <div class="bg-[#121420] border border-brandBorder rounded-2xl w-full max-w-xl overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+        
+        <!-- Header -->
+        <div class="px-6 py-4 border-b border-brandBorder flex justify-between items-center bg-brandCard/40">
+          <div>
+            <h3 class="text-lg font-bold text-zinc-100" id="rider-modal-title">Rider Credentials</h3>
+            <p class="text-xs text-brandTextGrey">Pending driver validation audit</p>
+          </div>
+          <button onclick="closeRiderDocModal()" class="text-brandTextGrey hover:text-zinc-100">
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Documents grid -->
+        <div class="p-6 space-y-6">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            
+            <!-- License Card -->
+            <div class="border border-brandBorder rounded-xl overflow-hidden bg-brandCard/50 flex flex-col">
+              <div class="p-3 border-b border-brandBorder text-xs font-bold text-zinc-300">1. Motorcycle Driver License</div>
+              <div class="h-32 flex items-center justify-center bg-slate-900/60 p-4">
+                <div class="w-full h-full bg-[#1e293b]/70 border border-slate-700/60 rounded-md p-2 flex flex-col justify-between">
+                  <div class="flex gap-2">
+                    <div class="w-6 h-6 rounded bg-brandGold flex items-center justify-center text-[10px] text-brandBg">✓</div>
+                    <div class="flex-1 space-y-1">
+                      <div class="w-14 h-2 bg-zinc-400 rounded"></div>
+                      <div class="w-10 h-1 bg-zinc-500 rounded"></div>
+                    </div>
+                  </div>
+                  <div class="w-full h-1 bg-zinc-600 rounded"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Criminal Record check -->
+            <div class="border border-brandBorder rounded-xl overflow-hidden bg-brandCard/50 flex flex-col">
+              <div class="p-3 border-b border-brandBorder text-xs font-bold text-zinc-300">2. Criminal Background Certificate</div>
+              <div class="h-32 flex items-center justify-center bg-slate-900/60 p-4">
+                <div class="w-full h-full bg-[#1e293b]/70 border border-slate-700/60 rounded-md p-2 flex flex-col justify-between">
+                  <div class="flex items-center justify-center flex-1">
+                    <div class="w-10 h-10 rounded-full border border-brandGold/40 border-dashed flex items-center justify-center text-[8px] text-brandGold font-mono">CLEAN</div>
+                  </div>
+                  <div class="w-full h-1 bg-zinc-500 rounded"></div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Footer Actions -->
+        <div class="px-6 py-4 border-t border-brandBorder flex justify-end gap-3 bg-brandCard/20">
+          <button onclick="closeRiderDocModal()" class="px-4 py-2 border border-brandBorder hover:bg-brandBorder rounded-xl text-xs font-bold text-zinc-300 transition-all">Close</button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- MODAL: REJECTION REASON INPUT -->
+    <div id="reject-modal" class="fixed inset-0 z-[110] hidden bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+      <div class="bg-[#121420] border border-brandBorder rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
+        
+        <!-- Header -->
+        <div class="px-6 py-4 border-b border-brandBorder flex justify-between items-center bg-brandCard/40">
+          <h3 class="text-lg font-bold text-coralRed">Rejection Comments</h3>
+          <button onclick="closeRejectModal()" class="text-brandTextGrey hover:text-zinc-100">
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Content -->
+        <div class="p-6 space-y-4">
+          <label class="block text-xs font-bold text-brandTextGrey uppercase tracking-wider mb-2">Rejection Reason</label>
+          <textarea id="reject-reason" rows="4" placeholder="Type comments explaining why the application was rejected..." class="w-full bg-brandBg border border-brandBorder rounded-xl p-3 text-zinc-100 placeholder-brandTextGrey focus:border-coralRed focus:outline-none text-sm"></textarea>
+        </div>
+
+        <!-- Footer Actions -->
+        <div class="px-6 py-4 border-t border-brandBorder flex justify-end gap-3 bg-brandCard/20">
+          <button onclick="closeRejectModal()" class="px-4 py-2 border border-brandBorder hover:bg-brandBorder rounded-xl text-xs font-bold text-zinc-300 transition-all">Cancel</button>
+          <button onclick="submitRejection()" class="px-4 py-2 bg-coralRed hover:bg-coralRed/90 text-white rounded-xl text-xs font-bold transition-all">Submit Reject</button>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SPA Logic (Vanilla JS) -->
+  <script>
+    // Tab switching logic
+    function switchTab(tabName) {
+      // Hide all panels
+      const tabs = ['overview', 'merchants', 'riders', 'financials'];
+      tabs.forEach(t => {
+        document.getElementById(`tab-${t}`).classList.add('hidden');
+        document.getElementById(`nav-${t}`).classList.remove('bg-brandGold/10', 'text-brandGold', 'border', 'border-brandGold/20');
+        document.getElementById(`nav-${t}`).classList.add('text-brandTextGrey', 'hover:text-zinc-100', 'hover:bg-brandCard/40');
+      });
+
+      // Show selected panel
+      document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+      document.getElementById(`nav-${tabName}`).classList.add('bg-brandGold/10', 'text-brandGold', 'border', 'border-brandGold/20');
+      document.getElementById(`nav-${tabName}`).classList.remove('text-brandTextGrey', 'hover:text-zinc-100', 'hover:bg-brandCard/40');
+      
+      // Close sidebar drawer on mobile after switching
+      const sidebar = document.getElementById('sidebar');
+      sidebar.classList.add('-translate-x-full');
+    }
+
+    // Sidebar drawer toggle for mobile
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      if (sidebar.classList.contains('-translate-x-full')) {
+        sidebar.classList.remove('-translate-x-full');
+      } else {
+        sidebar.classList.add('-translate-x-full');
+      }
+    }
+
+    // Modal: Document Verification dialog
+    function openDocModal(storeName, ownerName) {
+      document.getElementById('modal-title').innerText = `Verification Documents: ${storeName}`;
+      document.getElementById('modal-subtitle').innerText = `Owner Account Holder: ${ownerName}`;
+      document.getElementById('doc-modal').classList.remove('hidden');
+    }
+
+    function closeDocModal() {
+      document.getElementById('doc-modal').classList.add('hidden');
+    }
+
+    // Modal: Rider documents
+    function openRiderDocModal(riderName) {
+      document.getElementById('rider-modal-title').innerText = `Credentials: ${riderName}`;
+      document.getElementById('rider-doc-modal').classList.remove('hidden');
+    }
+
+    function closeRiderDocModal() {
+      document.getElementById('rider-doc-modal').classList.add('hidden');
+    }
+
+    // Action Logic: Reject dialog
+    let rejectTargetType = ''; // 'merchant' or 'rider'
+    let rejectTargetId = null;
+
+    function rejectMerchant(id) {
+      rejectTargetType = 'merchant';
+      rejectTargetId = id;
+      document.getElementById('reject-reason').value = '';
+      document.getElementById('reject-modal').classList.remove('hidden');
+    }
+
+    function rejectRider(id) {
+      rejectTargetType = 'rider';
+      rejectTargetId = id;
+      document.getElementById('reject-reason').value = '';
+      document.getElementById('reject-modal').classList.remove('hidden');
+    }
+
+    function closeRejectModal() {
+      document.getElementById('reject-modal').classList.add('hidden');
+    }
+
+    function submitRejection() {
+      const reason = document.getElementById('reject-reason').value;
+      if (!reason.trim()) {
+        alert('Please specify a reason for rejection.');
+        return;
+      }
+      
+      if (rejectTargetType === 'merchant') {
+        const row = document.getElementById(`merchant-row-${rejectTargetId}`);
+        if (row) row.remove();
+        alert(`Merchant application rejected. Reason: "${reason}"`);
+      } else if (rejectTargetType === 'rider') {
+        const row = document.getElementById(`rider-row-${rejectTargetId}`);
+        if (row) row.remove();
+        alert(`Rider application rejected. Reason: "${reason}"`);
+      }
+      
+      closeRejectModal();
+    }
+
+    // Action Logic: Approve
+    function approveMerchant(id) {
+      const gp = document.getElementById(`gp-${id}`).value;
+      alert(`Merchant approved successfully with GP rate configured at ${gp}%!`);
+      const row = document.getElementById(`merchant-row-${id}`);
+      if (row) row.remove();
+    }
+
+    function approveRider(id) {
+      alert(`Rider approved successfully! credentials added to fleet.`);
+      const row = document.getElementById(`rider-row-${id}`);
+      if (row) row.remove();
+    }
+
+    // Financial actions
+    function disbursePayout(btn, amount) {
+      if (btn.classList.contains('opacity-50')) return;
+      btn.innerText = 'Transferred';
+      btn.classList.add('opacity-50', 'cursor-not-allowed');
+      btn.classList.remove('hover:bg-brandGold', 'hover:text-brandBg');
+      alert(` Disbursed net transfer amount of ฿${amount.toLocaleString()} to merchant's bank account.`);
+    }
+
+    function disburseAllPayouts() {
+      const buttons = document.querySelectorAll('#settlement-table-body button');
+      buttons.forEach(btn => {
+        if (!btn.classList.contains('opacity-50')) {
+          btn.click();
+        }
+      });
+      alert('All pending merchant payouts disbursed successfully!');
+    }
+
+    // Initialize Chart.js Weekly Revenue Chart on page load
+    window.addEventListener('DOMContentLoaded', () => {
+      const ctx = document.getElementById('revenueChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+          datasets: [{
+            label: 'Sales Revenue (฿)',
+            data: [120000, 115000, 132000, 128000, 145000, 168000, 124500],
+            backgroundColor: '#DFB76C',
+            borderRadius: 8,
+            borderWidth: 0,
+            hoverBackgroundColor: '#f0c780',
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false,
+            }
+          },
+          scales: {
+            y: {
+              grid: {
+                color: '#262A3D',
+              },
+              ticks: {
+                color: '#94A3B8',
+                font: {
+                  family: 'Inter',
+                  size: 11
+                }
+              }
+            },
+            x: {
+              grid: {
+                display: false,
+              },
+              ticks: {
+                color: '#94A3B8',
+                font: {
+                  family: 'Inter',
+                  size: 11
+                }
+              }
+            }
+          }
+        }
+      });
+    });
+  </script>
+</body>
+</html>
